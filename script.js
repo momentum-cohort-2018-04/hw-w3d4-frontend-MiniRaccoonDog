@@ -5,7 +5,7 @@ class Game {
         this.gameSize = { x: 350, y: 350 };
         this.pieces= []
         this.player=new Player (this)
-        console.log(this.player)
+        // console.log(this.player)
         this.coin=new Coin (this)
     }
     draw() {
@@ -15,9 +15,12 @@ class Game {
         this.screen.strokeRect(150,150,200,200)
         this.player.draw()
         this.coin.draw()
+        this.screen.font = "100px Arial";
+        this.screen.strokeText(this.coin.score,10,90)
     }
     update(){
         this.player.update()
+        this.coin.update(this.player.location)
     }
     tick() {
         this.update()
@@ -32,36 +35,27 @@ class Player {
         this.screen=game.screen
         this.canvas=game.canvas
         this.keyboarder=new Keyboarder()
-        console.log(this.keyboarder)
-        this.location= {x:230,y:230}
+        this.location= {x:230,y:230,size:40}
     }
     draw() {
         this.screen.fillStyle = "#FF00FF"
-        var size= 40
+        var size=this.location.size
         var leftX=this.location.x
         var leftY=this.location.y
         this.screen.fillRect(leftX,leftY,size,size)
     }
     update() {
-        if (this.keyboarder.isDown(37)&& this.location.x>150){
-            //move left
-            this.location.x -= 3;
-        }else if (this.keyboarder.isDown(39) && this.location.x<310){
-            //move right
-            this.location.x += 3;
-        }else if (this.keyboarder.isDown(38) && this.location.y>150){
-            //move up
-            this.location.y -= 3;
-        }else if (this.keyboarder.isDown(40) && this.location.y<310){
-            //move down
-            this.location.y += 3;
-        // }else if (this.keyboarder.isDown(83)){
-        //     //S press
-        //     console.log("i dunno what 's' does yet")
+        if (this.keyboarder.isDown(Keyboarder.KEYS.LEFT)&& this.location.x>155){
+            this.location.x -= 5;
+        }else if (this.keyboarder.isDown(Keyboarder.KEYS.RIGHT) && this.location.x<305){
+            this.location.x += 5;
+        }else if (this.keyboarder.isDown(Keyboarder.KEYS.UP) && this.location.y>155){
+            this.location.y -= 5;
+        }else if (this.keyboarder.isDown(Keyboarder.KEYS.DOWN) && this.location.y<305){
+            this.location.y += 5;
         }else{
             return
         }
-        
     }
 }
 class Keyboarder {
@@ -91,45 +85,92 @@ class Keyboarder {
   }
   Keyboarder.KEYS = { LEFT: 37, RIGHT: 39, UP: 38, DOWN: 40, S: 83 }
 
-
-
 class Coin {
     constructor (game) {
         this.game = game
         this.screen=this.game.screen
         this.canvas=this.game.canvas
-        this.coindrop= {x:300,y:200}
+        this.coindrop={x:230,y:300,size:20}
+        this.score=0
     }
     draw() {
         this.screen.fillStyle = "#F0000F"
-        var size= 20
+        var size=this.coindrop.size
         var leftX=this.coindrop.x
         var leftY=this.coindrop.y
         this.screen.fillRect(leftX,leftY,size,size)
     }
-    
+    randomlocation(coindrop, playerlocate) {
+        var array = []
+        for (var i = 155; i < 325 ; i++){
+            array.push(i)
+        }
+        var arrayX= array.slice(0)
+        var arrayY= array.slice(0)
+ 
+        var invalidX = []
+        var invalidY = []
+
+        for (var i = coindrop.x; i < (coindrop.x+coindrop.size) ; i++){
+            invalidX.push(i)
+        }
+        for (var i = playerlocate.x; i < (playerlocate.x+playerlocate.size) ; i++){
+            invalidX.push(i)
+        }
+
+        for (var i = coindrop.y; i < (coindrop.y+coindrop.size) ; i++){
+            invalidY.push(i)
+        }
+        for (var i = playerlocate.y; i < (playerlocate.y+playerlocate.size) ; i++){
+            invalidY.push(i)
+        }
+
+        var finalX = arrayX.filter(function(num) {
+            return !(invalidX.indexOf(num) !== -1)
+        })
+        var finalY = arrayY.filter(function(num) {
+            return !(invalidY.indexOf(num) !== -1)
+        })
+
+        function getRandomArbitrary(array) {
+            var randomindex =  Math.floor(Math.random() * array.length)
+            return array[randomindex]
+        }
+        this.coindrop.x = getRandomArbitrary(finalX)
+        this.coindrop.y = getRandomArbitrary(finalY)
+    }
+    update(playerlocate) {
+        if (colliding(this.coindrop, playerlocate)){
+            console.log("IT HIT")
+            this.randomlocation(this.coindrop, playerlocate)
+            this.score+= 1
+            console.log(this.score)
+        }
+        // console.log("no collision")
+    }
 }
 
-// }
+//OG code again but i change less
+var colliding = function(b1, b2) {
+    var b1centerX= b1.x+(b1.size/2)
+    var b1centerY= b1.y+(b1.size/2)
+
+    var b2centerX= b2.x+(b2.size/2)
+    var b2centerY= b2.y+(b2.size/2)
+
+    return !( b1 === b2 ||
+        b1centerX + b1.size / 2 < b2centerX - b2.size / 2 ||
+        b1centerY + b1.size / 2 < b2centerY - b2.size / 2 ||
+        b1centerX - b1.size / 2 > b2centerX + b2.size / 2 ||
+        b1centerY - b1.size / 2 > b2centerY + b2.size / 2
+    );
+};
+
 window.addEventListener('load', function() {
     var setup=new Game(document.getElementById("gameCanvas"))
     setup.tick()
-    // var players=new Player(setup)
-    // players.draw()
-
   });
 
-
-// Create a Player class
-//  a method draw that draws a 40x40 square in the middle of the canvas.
-// The Game class's draw method should call the Player class's draw method.
-
-// Add movement to the player's rectangle. Create a Keyboarder class.
-  //You can use the one from Cook's annotated Space Invaders
-  //Use your keyboarder to make the player's rectangle move
-  //you will need to add an update method to the Game class
-  // and an update method to the Player class.
-// The rectangle should not be allowed to move outside the containing hollow rectangle.
 
 //Add a coin for the player to gather to the game. 
 //This coin should appear in a random position that is not the player's current position
@@ -143,26 +184,3 @@ window.addEventListener('load', function() {
     //and travel to the opposite edge. 
     //They should cross through the outer rectangle that encloses the player. 
     //If the player and a hazard collide, reset the score.
-
-
-/*
-var Keyboarder = function() {
-    // Records up/down state of each key that has ever been pressed.
-    var keyState = {};
-    // When key goes down, record that it is down.
-    window.addEventListener('keydown', function(e) {
-        keyState[e.keyCode] = true;
-    });
-    // When key goes up, record that it is up.
-    window.addEventListener('keyup', function(e) {
-        keyState[e.keyCode] = false;
-    });
-    // Returns true if passed key is currently down. 
-    // keyCode is a unique number that represents a particular key on the keyboard.
-    this.isDown = function(keyCode) {
-        return keyState[keyCode] === true;
-    };
-    // Handy constants that give keyCodes human-readable names.
-    this.KEYS = { LEFT: 37, RIGHT: 39, S: 83 };
-};*/
-
