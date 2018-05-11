@@ -4,9 +4,11 @@ class Game {
         this.canvas = canvas
         this.gameSize = { x: 350, y: 350 };
         this.pieces= []
-        this.player=new Player (this)
+        this.player=new Player(this)
         // console.log(this.player)
-        this.coin=new Coin (this)
+        this.coin=new Coin(this)
+        this.trouble=new Trouble(this)
+        this.counter = 0
     }
     draw() {
         this.screen.clearRect(0, 0, this.canvas.width, this.canvas.height)
@@ -15,16 +17,25 @@ class Game {
         this.screen.strokeRect(150,150,200,200)
         this.player.draw()
         this.coin.draw()
+        this.trouble.draw()
         this.screen.font = "100px Arial";
         this.screen.strokeText(this.coin.score,10,90)
     }
     update(){
         this.player.update()
         this.coin.update(this.player.location)
+        this.trouble.update(this.player.location)
     }
     tick() {
         this.update()
+        if (Math.random() < .005){
+            this.trouble.maketrouble()
+        }
+        if (this.counter%9 == 0){
+            this.trouble.maketrouble()
+        }
         this.draw()
+        this.counter+=1
         requestAnimationFrame(this.tick.bind(this))
     }
 } 
@@ -60,30 +71,30 @@ class Player {
 }
 class Keyboarder {
     constructor () {
-      this.keyState = {}
-      
-      window.addEventListener('keydown', function(e) {
+    this.keyState = {}
+    
+    window.addEventListener('keydown', function(e) {
         this.keyState[e.keyCode] = true
-      }.bind(this))
-      
-      window.addEventListener('keyup', function(e) {
+    }.bind(this))
+
+    window.addEventListener('keyup', function(e) {
         this.keyState[e.keyCode] = false
-      }.bind(this))
+    }.bind(this))
     }
     
     isDown (keyCode) {
-      return this.keyState[keyCode] === true
+    return this.keyState[keyCode] === true
     }
     
     on (keyCode, callback) {
-      window.addEventListener('keydown', function (e) {
+    window.addEventListener('keydown', function (e) {
         if (e.keyCode === keyCode) {
-          callback()
+        callback()
         }
-      })
+    })
     }                      
-  }
-  Keyboarder.KEYS = { LEFT: 37, RIGHT: 39, UP: 38, DOWN: 40, S: 83 }
+}
+Keyboarder.KEYS = { LEFT: 37, RIGHT: 39, UP: 38, DOWN: 40, S: 83 }
 
 class Coin {
     constructor (game) {
@@ -107,7 +118,7 @@ class Coin {
         }
         var arrayX= array.slice(0)
         var arrayY= array.slice(0)
- 
+
         var invalidX = []
         var invalidY = []
 
@@ -149,7 +160,63 @@ class Coin {
         // console.log("no collision")
     }
 }
+class Trouble {
+    constructor(game){
+        this.game=game
+        this.troublesX=[]
+        this.troublesY=[]
+        this.maketrouble()
+    }
+    draw() {
+        for (var blip of this.troublesX){
+            this.game.screen.fillStyle = "#000"
+            var size=blip.size
+            var leftX=blip.x
+            var leftY=blip.y
+            this.game.screen.fillRect(leftX,leftY,size,size)
+        }
+        for (var blip of this.troublesY){
+            this.game.screen.fillStyle = "#000"
+            var size=blip.size
+            var leftX=blip.x
+            var leftY=blip.y
+            this.game.screen.fillRect(leftX,leftY,size,size)
+        }
+    }
+    maketrouble(v){
+        function getRandomInt() {
+            return Math.floor(Math.random() * (305 - 155)) + 155; //The maximum is exclusive and the minimum is inclusive
+        }
+        // this.troublesX.push({x:getRandomInt(),y:10,size:20})
+        // this.troublesY.push({x:10,y:getRandomInt(),size:20})
+        if (Math.random() > .5) {
+            this.troublesX.push({x:getRandomInt(),y:10,size:20})
+        }else {this.troublesY.push({x:10,y:getRandomInt(),size:20})}
 
+        this.troublesX.filter(function(unit) {
+            return !(unit.x > 350)
+        })
+        this.troublesY.filter(function(unit) {
+            return !(unit.y > 350)
+        }) 
+            
+    }
+    update(playerlocate){
+        for (var blip of this.troublesX){
+            blip.y+=3
+            if (colliding(blip, playerlocate)){
+                console.log("BLIP HIT")
+            }
+        }
+
+        for (var blip of this.troublesY){
+            blip.x+=3
+            if (colliding(blip, playerlocate)){
+                console.log("BLIP HIT")
+            }
+        }
+    }
+}
 //OG code again but i change less
 var colliding = function(b1, b2) {
     var b1centerX= b1.x+(b1.size/2)
@@ -169,15 +236,7 @@ var colliding = function(b1, b2) {
 window.addEventListener('load', function() {
     var setup=new Game(document.getElementById("gameCanvas"))
     setup.tick()
-  });
-
-
-//Add a coin for the player to gather to the game. 
-//This coin should appear in a random position that is not the player's current position
-//When the player collects it, it should disappear and reappear elsewhere.
-
-//Add a score to the game. The score should go up by one every time the coin is collected.
-    //To do this, you will likely want to create a Coin class.
+});
 
 //Add hazards to the game. 
 //flying squares that come from a random edge of the canvas
