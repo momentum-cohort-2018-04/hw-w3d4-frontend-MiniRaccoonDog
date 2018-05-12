@@ -5,10 +5,10 @@ class Game {
         this.gameSize = { x: 350, y: 350 };
         this.pieces= []
         this.player=new Player(this)
-        // console.log(this.player)
         this.coin=new Coin(this)
         this.trouble=new Trouble(this)
         this.counter = 0
+        this.score = 0
     }
     draw() {
         this.screen.clearRect(0, 0, this.canvas.width, this.canvas.height)
@@ -19,19 +19,44 @@ class Game {
         this.coin.draw()
         this.trouble.draw()
         this.screen.font = "100px Arial";
-        this.screen.strokeText(this.coin.score,10,90)
+        this.screen.strokeText(this.score,10,90)
+        // this.screen.strokeText(this.score,380,90)
+        // this.screen.strokeText(this.score,10,460)
+        // this.screen.strokeText(this.score,380,460)
     }
     update(){
         this.player.update()
-        this.coin.update(this.player.location)
-        this.trouble.update(this.player.location)
+        
+        if (colliding(this.coin.coindrop, this.player.location)){
+            // console.log("IT HIT")
+            this.coin.randomlocation(this.coin.coindrop, this.player.location)
+            this.score+= 1
+            // console.log(this.score)
+        }
+        for (var blip of this.trouble.troublesX){
+            blip.y+=3
+            if (colliding(blip, this.player.location)){
+                // console.log("BLIP HIT")
+                // this.score -= 1 //lol deficit version
+                this.score = 0*this.score
+            }
+        }
+        for (var blip of this.trouble.troublesY){
+            blip.x+=3
+            if (colliding(blip, this.player.location)){
+                // console.log("BLIP HIT")
+                // this.score -= 1  //lol deficit version
+                this.score= 0*this.score
+            }
+        }
     }
+
     tick() {
         this.update()
         if (Math.random() < .005){
             this.trouble.maketrouble()
         }
-        if (this.counter%60 == 0){
+        if (this.counter%600 == 0){
             this.trouble.maketrouble()
         }
         this.draw()
@@ -102,7 +127,6 @@ class Coin {
         this.screen=this.game.screen
         this.canvas=this.game.canvas
         this.coindrop={x:230,y:300,size:20}
-        this.score=0
     }
     draw() {
         this.screen.fillStyle = "#F0000F"
@@ -150,15 +174,6 @@ class Coin {
         this.coindrop.x = getRandomArbitrary(finalX)
         this.coindrop.y = getRandomArbitrary(finalY)
     }
-    update(playerlocate) {
-        if (colliding(this.coindrop, playerlocate)){
-            console.log("IT HIT")
-            this.randomlocation(this.coindrop, playerlocate)
-            this.score+= 1
-            console.log(this.score)
-        }
-        // console.log("no collision")
-    }
 }
 class Trouble {
     constructor(game){
@@ -183,12 +198,10 @@ class Trouble {
             this.game.screen.fillRect(leftX,leftY,size,size)
         }
     }
-    maketrouble(v){
+    maketrouble(){
         function getRandomInt() {
-            return Math.floor(Math.random() * (305 - 155)) + 155; //The maximum is exclusive and the minimum is inclusive
+            return Math.floor(Math.random() * (305 - 155)) + 155;
         }
-        // this.troublesX.push({x:getRandomInt(),y:10,size:20})
-        // this.troublesY.push({x:10,y:getRandomInt(),size:20})
         if (Math.random() > .5) {
             this.troublesX.push({x:getRandomInt(),y:10,size:20})
         }else {this.troublesY.push({x:10,y:getRandomInt(),size:20})}
@@ -198,27 +211,7 @@ class Trouble {
         })
         this.troublesY.filter(function(unit) {
             return !(unit.y > 350)
-        }) 
-            
-    }
-    update(playerlocate){
-        for (var blip of this.troublesX){
-            blip.y+=3
-            if (colliding(blip, playerlocate)){
-                console.log("BLIP HIT")
-                this.coin.score = 0
-                console.log(this.coin.score)
-            }
-        }
-
-        for (var blip of this.troublesY){
-            blip.x+=3
-            if (colliding(blip, playerlocate)){
-                console.log("BLIP HIT")
-                this.coin.score=0
-                console.log(this.coin.score)
-            }
-        }
+        })       
     }
 }
 //OG code again but i change less
@@ -241,9 +234,3 @@ window.addEventListener('load', function() {
     var setup=new Game(document.getElementById("gameCanvas"))
     setup.tick()
 });
-
-//Add hazards to the game. 
-//flying squares that come from a random edge of the canvas
-    //and travel to the opposite edge. 
-    //They should cross through the outer rectangle that encloses the player. 
-    //If the player and a hazard collide, reset the score.
