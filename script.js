@@ -31,7 +31,7 @@ class Game {
         if (Math.random() < .005){
             this.trouble.maketrouble()
         }
-        if (this.counter%9 == 0){
+        if (this.counter%60 == 0){
             this.trouble.maketrouble()
         }
         this.draw()
@@ -162,10 +162,10 @@ class Coin {
 }
 class Trouble {
     constructor(game){
+        this.coin=new Coin(this)
         this.game=game
         this.troublesX=[]
         this.troublesY=[]
-        this.maketrouble()
     }
     draw() {
         for (var blip of this.troublesX){
@@ -206,6 +206,8 @@ class Trouble {
             blip.y+=3
             if (colliding(blip, playerlocate)){
                 console.log("BLIP HIT")
+                this.coin.score = 0
+                console.log(this.coin.score)
             }
         }
 
@@ -213,6 +215,8 @@ class Trouble {
             blip.x+=3
             if (colliding(blip, playerlocate)){
                 console.log("BLIP HIT")
+                this.coin.score=0
+                console.log(this.coin.score)
             }
         }
     }
