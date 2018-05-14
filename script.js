@@ -33,19 +33,32 @@ class Game {
             this.score+= 1
             // console.log(this.score)
         }
-        for (var blip of this.trouble.troublesX){
-            blip.y+=3
+        for (var blip of this.trouble.troublesXRight){
+            blip.y+=2
+            //speed debate to be had here
             if (colliding(blip, this.player.location)){
                 // console.log("BLIP HIT")
                 // this.score -= 1 //lol deficit version
                 this.score = 0*this.score
             }
         }
-        for (var blip of this.trouble.troublesY){
-            blip.x+=3
+        for (var blip of this.trouble.troublesYDown){
+            blip.x+=2
             if (colliding(blip, this.player.location)){
                 // console.log("BLIP HIT")
                 // this.score -= 1  //lol deficit version
+                this.score= 0*this.score
+            }
+        }
+        for (var blip of this.trouble.troublesXLeft){
+            blip.y-=2
+            if (colliding(blip, this.player.location)){
+                this.score = 0*this.score
+            }
+        }
+        for (var blip of this.trouble.troublesYUp){
+            blip.x-=2
+            if (colliding(blip, this.player.location)){
                 this.score= 0*this.score
             }
         }
@@ -56,7 +69,7 @@ class Game {
         if (Math.random() < .005){
             this.trouble.maketrouble()
         }
-        if (this.counter%600 == 0){
+        if (this.counter%300 == 0){
             this.trouble.maketrouble()
         }
         this.draw()
@@ -74,7 +87,8 @@ class Player {
         this.location= {x:230,y:230,size:40}
     }
     draw() {
-        this.screen.fillStyle = "#FF00FF"
+        this.screen.fillStyle = "#419D78"
+        //2D728F 3B8EA5
         var size=this.location.size
         var leftX=this.location.x
         var leftY=this.location.y
@@ -89,8 +103,6 @@ class Player {
             this.location.y -= 5;
         }else if (this.keyboarder.isDown(Keyboarder.KEYS.DOWN) && this.location.y<305){
             this.location.y += 5;
-        }else{
-            return
         }
     }
 }
@@ -129,7 +141,8 @@ class Coin {
         this.coindrop={x:230,y:300,size:20}
     }
     draw() {
-        this.screen.fillStyle = "#F0000F"
+        this.screen.fillStyle = "#C04ABC"
+        //F4BF4B
         var size=this.coindrop.size
         var leftX=this.coindrop.x
         var leftY=this.coindrop.y
@@ -179,39 +192,53 @@ class Trouble {
     constructor(game){
         this.coin=new Coin(this)
         this.game=game
-        this.troublesX=[]
-        this.troublesY=[]
+        this.troublesXRight=[]
+        this.troublesXLeft=[]
+        this.troublesYDown=[]
+        this.troublesYUp=[]
+    }
+    parseTrouble(troublearray){
+        for (var blip of troublearray){
+            this.game.screen.fillStyle = "#000"
+            var size=blip.size
+            var leftX=blip.x
+            var leftY=blip.y
+            this.game.screen.fillRect(leftX,leftY,size,size)
+        }
     }
     draw() {
-        for (var blip of this.troublesX){
-            this.game.screen.fillStyle = "#000"
-            var size=blip.size
-            var leftX=blip.x
-            var leftY=blip.y
-            this.game.screen.fillRect(leftX,leftY,size,size)
-        }
-        for (var blip of this.troublesY){
-            this.game.screen.fillStyle = "#000"
-            var size=blip.size
-            var leftX=blip.x
-            var leftY=blip.y
-            this.game.screen.fillRect(leftX,leftY,size,size)
-        }
+        this.parseTrouble(this.troublesXRight)
+        this.parseTrouble(this.troublesYDown)
+        this.parseTrouble(this.troublesXLeft)
+        this.parseTrouble(this.troublesYUp)
     }
     maketrouble(){
         function getRandomInt() {
             return Math.floor(Math.random() * (305 - 155)) + 155;
         }
-        if (Math.random() > .5) {
-            this.troublesX.push({x:getRandomInt(),y:10,size:20})
-        }else {this.troublesY.push({x:10,y:getRandomInt(),size:20})}
+        var randoNum = Math.random()
+        if (randoNum > .75) {
+            this.troublesXRight.push({x:getRandomInt(),y:10,size:20})
+        }else if (randoNum < .25) {
+            this.troublesYDown.push({x:10,y:getRandomInt(),size:20})
+        }else if ((randoNum > .5) && (randoNum > .25)) {
+            this.troublesXLeft.push({x:getRandomInt(),y:490,size:20})
+        }else {
+            this.troublesYUp.push({x:490,y:getRandomInt(),size:20})
+        }
 
-        this.troublesX.filter(function(unit) {
+        this.troublesXRight.filter(function(unit) {
             return !(unit.x > 350)
         })
-        this.troublesY.filter(function(unit) {
+        this.troublesYDown.filter(function(unit) {
             return !(unit.y > 350)
-        })       
+        })
+        this.troublesXLeft.filter(function(unit) {
+            return !(unit.x < 350)
+        })
+        this.troublesYUp.filter(function(unit) {
+            return !(unit.y < 350)
+        })      
     }
 }
 //OG code again but i change less
